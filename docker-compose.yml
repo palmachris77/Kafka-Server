@@ -1,0 +1,41 @@
+version: '3'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - ./data/zookeeper/data:/data
+      - ./data/zookeeper/datalog:/datalog
+    networks:
+      bank_network:
+        aliases:
+          - app_subnet
+        #ipv4_address: 172.20.0.4
+  kafka1:
+    image: wurstmeister/kafka
+    container_name: kafka1
+    ports:
+      - "9091:9091"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://:19091, LISTENER_DOCKER_EXTERNAL://kafka1:9091
+      KAFKA_LISTENERS: LISTENER_DOCKER_INTERNAL://:19091, LISTENER_DOCKER_EXTERNAL://kafka1:9091
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT, LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_MESSAGE_MAX_BYTES: 2000000
+    volumes:
+      - ./data/kafka1/data:/var/lib/kafka/data
+    networks:
+      bank_network:
+        aliases:
+          - app_subnet
+        #ipv4_address: 172.20.0.4
+networks:
+  bank_network:
+    name: app_subnet
+    external: true
